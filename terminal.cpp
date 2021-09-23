@@ -17,7 +17,6 @@ class Shell {
         // Attrs
         map<string, function<int(string)>> commands;
 
-
         // Methods
         // Constructor    
         Shell();
