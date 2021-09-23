@@ -61,24 +61,24 @@ int BuiltInCommands::help(char** args) {
  } 
 
 int BuiltInCommands::exit(char** args) {
-    exit(EXIT_SUCCESS);
-    return 0;
+    return -1;
 } 
 
 int BuiltInCommands::execute(const string cmd, char** args) 
 {
     if(this->commands.find(cmd) != this->commands.end()) {
-        this->commands.at(cmd)(args);
-        return 0;
+        return this->commands.at(cmd)(args);
     }
 
     return 1;
 }
 
 int execute(BuiltInCommands bic, const string cmd, char** args) 
-{
+{   
+    int bic_return;
     // found in built in
-    if(bic.execute(cmd, args) == 0) return 0;
+    if(bic_return = bic.execute(cmd, args) == 0) return 0;
+    else if(bic_return = -1) return bic_return;
 
     pid_t pid = fork();
     
@@ -139,8 +139,8 @@ int main(int argc, char **argv) {
     cout << "Type 'help' to know more about this shell" << endl;
     cout << red << "*********************" << def << endl;
 
-
     BuiltInCommands bic;
+    int exec_return;
 
     while(1) {
         string command;
@@ -163,7 +163,9 @@ int main(int argc, char **argv) {
             pointerVec[i] = raw_text[i].data();
         char** args = pointerVec.data();
 
-        execute(bic, raw_text[0], args);
+        exec_return = execute(bic, raw_text[0], args);
+
+        if(exec_return == -1) break;
     }
     return 0;
 }
