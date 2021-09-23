@@ -4,6 +4,7 @@
 #include <random>
 #include <functional>
 #include <map>
+#include <string>
 
 /* My Headers */
 
@@ -26,6 +27,7 @@ class Shell {
         int hello(string args);
         int exit(string args);
         int clear(string args);
+        int echo(string args);
 
     private:
         // Attrs
@@ -38,6 +40,7 @@ Shell::Shell() {
     this->commands.insert(pair<string, function<int(string)>>("exit", bind (&Shell::exit, this, std::placeholders::_1)));
     this->commands.insert(pair<string, function<int(string)>>("help", bind (&Shell::help, this, std::placeholders::_1)));
     this->commands.insert(pair<string, function<int(string)>>("clear", bind (&Shell::clear, this, std::placeholders::_1)));
+    this->commands.insert(pair<string, function<int(string)>>("echo", bind (&Shell::echo, this, std::placeholders::_1)));
 
 
     this->username = getenv("USER");
@@ -59,6 +62,11 @@ int Shell::Execute(string command, string args) {
 
 int Shell::hello(string args) {
     cout << "hello!" << endl;
+    return 0;
+}
+
+int Shell::echo(string args) {
+    cout << args << endl;
     return 0;
 }
 
@@ -109,13 +117,20 @@ int main(int argc, char **argv) {
     while(1) {
         string command;
 
+        // Input
         cout << ">>> ";
-        cin >> command;
+        getline(cin, command);
         
-        vector<string> args = split(command, " ");
+        // Filter
+        vector<string> raw_text = split(command, " ");
+        string args = "";
+        for(int i = 1; i < raw_text.size(); i++) {
+            args += raw_text[i];
+            if (i < raw_text.size() - 1) args += " ";
+        }
 
         // Executing commands
-        fb = commands.Execute(args[0], "");
+        fb = commands.Execute(raw_text[0], args);
 
         if(fb == 1)
             cout << "Command not found!" << endl;
