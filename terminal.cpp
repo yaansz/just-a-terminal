@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
 
 /* Imports */
 #include "include/color.hpp"
@@ -17,6 +18,42 @@
 /* My Headers */
 using namespace std;
 using namespace std::filesystem;
+
+void t_cd(char **args);
+void t_help(char **args);
+void t_exit(char **args);
+
+char *builtin_str[] = {
+  "cd",
+  "help",
+  "exit"
+};
+
+void (*builtin_func[]) (char **) = {
+  &t_cd,
+  &t_help,
+  &t_exit
+};
+
+void t_cd(char** args)
+{
+    chdir(args[1]); 
+}
+
+void t_help(char** args) { 
+    cout << "*****************" << endl; 
+    cout << "List of builtins commands" << endl; 
+     
+    for (const auto &p : builtin_str) { 
+        cout << p << endl; 
+    }
+
+    cout << "*****************" << endl; 
+ } 
+
+void t_exit(char** args) {
+    exit(EXIT_SUCCESS);
+} 
 
 int blank(string str) {
     const char * cstr = str.c_str();
@@ -48,11 +85,10 @@ vector<string> split(const string& str, const string& delim)
 
 void execute(const vector<string> raw_text, char** args) 
 {
-    // built in
-    if(raw_text[0].compare("cd") == 0) {
-            cout << " here " << endl;
-            chdir(args[1]); 
-            return;    
+    for (int i = 0; i < 3; i++) {
+        if (strcmp(args[0], builtin_str[i]) == 0) {
+            return (*builtin_func[i])(args);
+        }
     }
 
     pid_t pid = fork();
@@ -106,8 +142,6 @@ int main(int argc, char **argv) {
         char** args = pointerVec.data();
 
         execute(raw_text, args);
-
     }
     return 0;
 }
-
