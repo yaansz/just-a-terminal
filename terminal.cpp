@@ -18,6 +18,16 @@
 using namespace std;
 using namespace std::filesystem;
 
+int blank(string str) {
+    const char * cstr = str.c_str();
+    
+    for(int i = 0; i < str.length(); i++) {
+        if (cstr[i] != ' ')
+            return 0;
+    }
+    return 1;
+}
+
 /* Helpful */
 vector<string> split(const string& str, const string& delim)
 {
@@ -35,15 +45,30 @@ vector<string> split(const string& str, const string& delim)
     return tokens;
 }
 
-int blank(string str) {
-    const char * cstr = str.c_str();
-    
-    for(int i = 0; i < str.length(); i++) {
-        if (cstr[i] != ' ')
-            return 0;
+
+void execute(const vector<string> raw_text, char** args) 
+{
+    // built in
+    if(raw_text[0].compare("cd") == 0) {
+            cout << " here " << endl;
+            chdir(args[1]); 
+            return;    
     }
-    return 1;
+
+    pid_t pid = fork();
+    
+    if(pid == -1)
+        cout << "Error to fork" << endl;
+    else if(pid == 0) {
+        if(execvp(raw_text[0].c_str(), args) < 0) {
+            cout << "Error to exec the command" << endl;
+        }
+        exit(0);
+    } else {
+        wait(NULL);
+    }
 }
+
 
 
 /* Main Main Main */
@@ -57,6 +82,7 @@ int main(int argc, char **argv) {
     cout << "Welcome " << green << getenv("USER") << def << endl;
     cout << "Type 'help' to know more about this shell" << endl;
     cout << red << "*********************" << def << endl;
+
 
     while(1) {
         string command;
@@ -79,26 +105,8 @@ int main(int argc, char **argv) {
             pointerVec[i] = raw_text[i].data();
         char** args = pointerVec.data();
 
-        // built in
-        if(raw_text[0].compare("cd") == 0) {
-                cout << " here " << endl;
-                chdir(args[1]); 
-                continue;    
-        }
+        execute(raw_text, args);
 
-        // Exec
-        pid_t pid = fork();
-        
-        if(pid == -1)
-            cout << "Error to fork" << endl;
-        else if(pid == 0) {
-            if(execvp(raw_text[0].c_str(), args) < 0) {
-                cout << "Error to exec the command" << endl;
-            }
-            exit(0);
-        } else {
-            wait(NULL);
-        }
     }
     return 0;
 }
