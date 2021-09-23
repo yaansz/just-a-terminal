@@ -109,6 +109,15 @@ vector<string> split(const string& str, const string& delim)
     return tokens;
 }
 
+int blank(string str) {
+    const char * cstr = str.c_str();
+    
+    for(int i = 0; i < str.length(); i++) {
+        if (cstr[i] != ' ')
+            return 0;
+    }
+    return 1;
+}
 
 /* Main Main Main */
 int main(int argc, char **argv) {
@@ -121,6 +130,9 @@ int main(int argc, char **argv) {
         cout << ">>> ";
         getline(cin, command);
         
+
+        if(command.empty() || blank(command)) continue;
+
         // Filter
         vector<string> raw_text = split(command, " ");
         string args = "";
