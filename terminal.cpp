@@ -19,6 +19,7 @@
 using namespace std;
 using namespace std::filesystem;
 
+#define DEBUG
 
 class BuiltInCommands {
 
@@ -61,12 +62,18 @@ int BuiltInCommands::help(char** args) {
  } 
 
 int BuiltInCommands::exit(char** args) {
+    #ifdef DEBUG
+    cout << "Returning -1" << endl;
+    #endif
     return -1;
 } 
 
 int BuiltInCommands::execute(const string cmd, char** args) 
 {
     if(this->commands.find(cmd) != this->commands.end()) {
+        #ifdef DEBUG
+        cout << "Executing command: " << cmd << endl;
+        #endif
         return this->commands.at(cmd)(args);
     }
 
@@ -75,10 +82,13 @@ int BuiltInCommands::execute(const string cmd, char** args)
 
 int execute(BuiltInCommands bic, const string cmd, char** args) 
 {   
-    int bic_return;
+
+    int bic_return = bic.execute(cmd, args);
     // found in built in
-    if(bic_return = bic.execute(cmd, args) == 0) return 0;
-    else if(bic_return = -1) return bic_return;
+    if(bic_return == 0) return 0;
+    else if(bic_return == -1) return bic_return;
+
+    cout << "bic_return: " << bic_return << endl;
 
     pid_t pid = fork();
     
@@ -146,7 +156,6 @@ int main(int argc, char **argv) {
         string command;
 
         // Input
-        cout << endl;
         cout << green << getenv("USER") << def << ":";
         cout << red << std::filesystem::current_path() << def; 
         cout << " >>> ";
