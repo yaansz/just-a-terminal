@@ -19,7 +19,7 @@
 using namespace std;
 using namespace std::filesystem;
 
-#define DEBUG
+//#define DEBUG
 
 class BuiltInCommands {
 
@@ -82,13 +82,14 @@ int BuiltInCommands::execute(const string cmd, char** args)
 
 int execute(BuiltInCommands bic, const string cmd, char** args) 
 {   
-
     int bic_return = bic.execute(cmd, args);
     // found in built in
     if(bic_return == 0) return 0;
     else if(bic_return == -1) return bic_return;
 
+    #ifdef DEBUG
     cout << "bic_return: " << bic_return << endl;
+    #endif
 
     pid_t pid = fork();
     
