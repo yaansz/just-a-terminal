@@ -1,2 +1,2 @@
 # just-a-terminal
-Another test
+Welcome! It's another college challenge, but I'm not sure it's correct! 😁 haha
