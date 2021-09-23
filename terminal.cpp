@@ -19,42 +19,88 @@
 using namespace std;
 using namespace std::filesystem;
 
-void t_cd(char **args);
-void t_help(char **args);
-void t_exit(char **args);
 
-char *builtin_str[] = {
-  "cd",
-  "help",
-  "exit"
+class BuiltInCommands {
+
+    public:
+
+    BuiltInCommands();
+    int cd(char **args);
+    int help(char **args);
+    int exit(char **args);
+    int execute(string cmd, char **args);
+
+    private:
+        
+    map<string, function<int(char **)>> commands;
 };
 
-void (*builtin_func[]) (char **) = {
-  &t_cd,
-  &t_help,
-  &t_exit
-};
-
-void t_cd(char** args)
-{
-    chdir(args[1]); 
+BuiltInCommands::BuiltInCommands() {
+    this->commands.insert(pair<string, function<int(char **)>>("cd", bind (&BuiltInCommands::cd, this, std::placeholders::_1)));
+    this->commands.insert(pair<string, function<int(char **)>>("help", bind (&BuiltInCommands::help, this, std::placeholders::_1)));
+    this->commands.insert(pair<string, function<int(char **)>>("exit", bind (&BuiltInCommands::exit, this, std::placeholders::_1)));
 }
 
-void t_help(char** args) { 
+int BuiltInCommands::cd(char** args) {
+    chdir(args[1]);
+
+    return 0; 
+}
+
+int BuiltInCommands::help(char** args) { 
     cout << "*****************" << endl; 
     cout << "List of builtins commands" << endl; 
      
-    for (const auto &p : builtin_str) { 
-        cout << p << endl; 
+     for (const auto &p : this->commands) { 
+        cout << p.first << endl;
     }
 
     cout << "*****************" << endl; 
+
+    return 0;
  } 
 
-void t_exit(char** args) {
+int BuiltInCommands::exit(char** args) {
     exit(EXIT_SUCCESS);
+    return 0;
 } 
 
+int BuiltInCommands::execute(const string cmd, char** args) 
+{
+    if(this->commands.find(cmd) != this->commands.end()) {
+        this->commands.at(cmd)(args);
+        return 0;
+    }
+
+    return 1;
+}
+
+int execute(BuiltInCommands bic, const string cmd, char** args) 
+{
+    // found in built in
+    if(bic.execute(cmd, args) == 0) return 0;
+
+    pid_t pid = fork();
+    
+    if(pid == -1)
+        cout << "Error to fork" << endl;
+
+    // Running child proccess
+    else if(pid == 0) {
+        if(execvp(cmd.c_str(), args) < 0) {
+            cout << "Error to exec the command" << endl;
+        }
+        // Killing it 🤬😡😡😠
+        exit(0);
+    // Wait until the child process is killed
+    } else {
+        wait(NULL);
+    }
+
+    return 0;
+}
+
+/* Helpful */
 int blank(string str) {
     const char * cstr = str.c_str();
     
@@ -65,7 +111,6 @@ int blank(string str) {
     return 1;
 }
 
-/* Helpful */
 vector<string> split(const string& str, const string& delim)
 {
     vector<string> tokens;
@@ -82,31 +127,6 @@ vector<string> split(const string& str, const string& delim)
     return tokens;
 }
 
-
-void execute(const vector<string> raw_text, char** args) 
-{
-    for (int i = 0; i < 3; i++) {
-        if (strcmp(args[0], builtin_str[i]) == 0) {
-            return (*builtin_func[i])(args);
-        }
-    }
-
-    pid_t pid = fork();
-    
-    if(pid == -1)
-        cout << "Error to fork" << endl;
-    else if(pid == 0) {
-        if(execvp(raw_text[0].c_str(), args) < 0) {
-            cout << "Error to exec the command" << endl;
-        }
-        exit(0);
-    } else {
-        wait(NULL);
-    }
-}
-
-
-
 /* Main Main Main */
 int main(int argc, char **argv) {
     Color::Modifier red(Color::FG_RED);
@@ -119,6 +139,8 @@ int main(int argc, char **argv) {
     cout << "Type 'help' to know more about this shell" << endl;
     cout << red << "*********************" << def << endl;
 
+
+    BuiltInCommands bic;
 
     while(1) {
         string command;
@@ -141,7 +163,7 @@ int main(int argc, char **argv) {
             pointerVec[i] = raw_text[i].data();
         char** args = pointerVec.data();
 
-        execute(raw_text, args);
+        execute(bic, raw_text[0], args);
     }
     return 0;
 }
