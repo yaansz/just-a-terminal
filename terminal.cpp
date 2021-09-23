@@ -15,12 +15,8 @@
 #include "include/color.hpp"
 
 /* My Headers */
-
-
-
 using namespace std;
 using namespace std::filesystem;
-
 
 /* Helpful */
 vector<string> split(const string& str, const string& delim)
@@ -73,7 +69,6 @@ int main(int argc, char **argv) {
 
         getline(cin, command);
         
-
         if(command.empty() || blank(command)) continue;
 
         // Filter
@@ -83,6 +78,13 @@ int main(int argc, char **argv) {
         for(unsigned i = 0; i < raw_text.size(); ++i)
             pointerVec[i] = raw_text[i].data();
         char** args = pointerVec.data();
+
+        // built in
+        if(raw_text[0].compare("cd") == 0) {
+                cout << " here " << endl;
+                chdir(args[1]); 
+                continue;    
+        }
 
         // Exec
         pid_t pid = fork();
