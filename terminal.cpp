@@ -133,6 +133,8 @@ int Shell::native(string args) {
 
 int Shell::cd(string args) {
 
+    cout << "WIP WIP WIP WIP" << endl;
+
     if(args.empty() || blank(args))
         cout << std::filesystem::current_path() << endl;
 
