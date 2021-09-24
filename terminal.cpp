@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
 
 /* Imports */
 #include "include/color.hpp"
@@ -18,6 +19,99 @@
 using namespace std;
 using namespace std::filesystem;
 
+//#define DEBUG
+
+class BuiltInCommands {
+
+    public:
+
+    BuiltInCommands();
+    int cd(char **args);
+    int help(char **args);
+    int exit(char **args);
+    int execute(string cmd, char **args);
+
+    private:
+        
+    map<string, function<int(char **)>> commands;
+};
+
+BuiltInCommands::BuiltInCommands() {
+    this->commands.insert(pair<string, function<int(char **)>>("cd", bind (&BuiltInCommands::cd, this, std::placeholders::_1)));
+    this->commands.insert(pair<string, function<int(char **)>>("help", bind (&BuiltInCommands::help, this, std::placeholders::_1)));
+    this->commands.insert(pair<string, function<int(char **)>>("exit", bind (&BuiltInCommands::exit, this, std::placeholders::_1)));
+}
+
+int BuiltInCommands::cd(char** args) {
+    chdir(args[1]);
+
+    return 0; 
+}
+
+int BuiltInCommands::help(char** args) { 
+    cout << "*****************" << endl; 
+    cout << "List of builtins commands" << endl; 
+     
+     for (const auto &p : this->commands) { 
+        cout << p.first << endl;
+    }
+
+    cout << "*****************" << endl; 
+
+    return 0;
+ } 
+
+int BuiltInCommands::exit(char** args) {
+    #ifdef DEBUG
+    cout << "Returning -1" << endl;
+    #endif
+    return -1;
+} 
+
+int BuiltInCommands::execute(const string cmd, char** args) 
+{
+    if(this->commands.find(cmd) != this->commands.end()) {
+        #ifdef DEBUG
+        cout << "Executing command: " << cmd << endl;
+        #endif
+        return this->commands.at(cmd)(args);
+    }
+
+    return 1;
+}
+
+int execute(BuiltInCommands bic, const string cmd, char** args) 
+{   
+    int bic_return = bic.execute(cmd, args);
+    // found in built in
+    if(bic_return == 0) return 0;
+    else if(bic_return == -1) return bic_return;
+
+    #ifdef DEBUG
+    cout << "bic_return: " << bic_return << endl;
+    #endif
+
+    pid_t pid = fork();
+    
+    if(pid == -1)
+        cout << "Error to fork" << endl;
+
+    // Running child proccess
+    else if(pid == 0) {
+        if(execvp(cmd.c_str(), args) < 0) {
+            cout << "Error to exec the command" << endl;
+        }
+        // Killing it 🤬😡😡😠
+        exit(0);
+    // Wait until the child process is killed
+    } else {
+        wait(NULL);
+    }
+
+    return 0;
+}
+
+/* Helpful */
 int blank(string str) {
     const char * cstr = str.c_str();
     
@@ -28,7 +122,6 @@ int blank(string str) {
     return 1;
 }
 
-/* Helpful */
 vector<string> split(const string& str, const string& delim)
 {
     vector<string> tokens;
@@ -45,32 +138,6 @@ vector<string> split(const string& str, const string& delim)
     return tokens;
 }
 
-
-void execute(const vector<string> raw_text, char** args) 
-{
-    // built in
-    if(raw_text[0].compare("cd") == 0) {
-            cout << " here " << endl;
-            chdir(args[1]); 
-            return;    
-    }
-
-    pid_t pid = fork();
-    
-    if(pid == -1)
-        cout << "Error to fork" << endl;
-    else if(pid == 0) {
-        if(execvp(raw_text[0].c_str(), args) < 0) {
-            cout << "Error to exec the command" << endl;
-        }
-        exit(0);
-    } else {
-        wait(NULL);
-    }
-}
-
-
-
 /* Main Main Main */
 int main(int argc, char **argv) {
     Color::Modifier red(Color::FG_RED);
@@ -83,12 +150,13 @@ int main(int argc, char **argv) {
     cout << "Type 'help' to know more about this shell" << endl;
     cout << red << "*********************" << def << endl;
 
+    BuiltInCommands bic;
+    int exec_return;
 
     while(1) {
         string command;
 
         // Input
-        cout << endl;
         cout << green << getenv("USER") << def << ":";
         cout << red << std::filesystem::current_path() << def; 
         cout << " >>> ";
@@ -105,9 +173,9 @@ int main(int argc, char **argv) {
             pointerVec[i] = raw_text[i].data();
         char** args = pointerVec.data();
 
-        execute(raw_text, args);
+        exec_return = execute(bic, raw_text[0], args);
 
+        if(exec_return == -1) break;
     }
     return 0;
 }
-
