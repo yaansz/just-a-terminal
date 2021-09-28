@@ -98,7 +98,15 @@ int execute(BuiltInCommands bic, const string cmd, char** args)
 
     // Running child proccess
     else if(pid == 0) {
+        
+        #ifdef DEBUG
+        cout << "Path: " << std::filesystem::current_path() << endl; 
+        cout << ":" << cmd.c_str() << ":" << endl;
+        cout << ":" << args[1] << ":" << endl;
+        #endif
+
         if(execvp(cmd.c_str(), args) < 0) {
+            perror("error");
             cout << "Error to exec the command" << endl;
         }
         // Killing it 🤬😡😡😠
@@ -168,9 +176,20 @@ int main(int argc, char **argv) {
         // Filter
         vector<string> raw_text = split(command, " ");
         
-        vector<char*> pointerVec(raw_text.size());
-        for(unsigned i = 0; i < raw_text.size(); ++i)
+        vector<char*> pointerVec(raw_text.size() + 1);
+
+        #ifdef DEBUG
+        cout << "args size: " << raw_text.size() << endl; 
+        #endif
+
+        for(unsigned i = 0; i < raw_text.size(); ++i) {
+
+            #ifdef DEBUG
+            cout << raw_text[i].data() << endl;
+            #endif
             pointerVec[i] = raw_text[i].data();
+        }
+        pointerVec[raw_text.size()] = NULL;
         char** args = pointerVec.data();
 
         exec_return = execute(bic, raw_text[0], args);
