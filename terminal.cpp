@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
         // Input
         cout << green << getenv("USER") << def << ":";
         cout << red << std::filesystem::current_path() << def; 
-        cout << " >>> ";
+        cout << ">>>";
 
         getline(cin, command);
         
@@ -175,18 +175,8 @@ int main(int argc, char **argv) {
 
         // Filter
         vector<string> raw_text = split(command, " ");
-        
         vector<char*> pointerVec(raw_text.size() + 1);
-
-        #ifdef DEBUG
-        cout << "args size: " << raw_text.size() << endl; 
-        #endif
-
         for(unsigned i = 0; i < raw_text.size(); ++i) {
-
-            #ifdef DEBUG
-            cout << raw_text[i].data() << endl;
-            #endif
             pointerVec[i] = raw_text[i].data();
         }
         pointerVec[raw_text.size()] = NULL;
